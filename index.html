@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>G 💜 S Valentine</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+h1, h2 {
+    color: #e91e63;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 25px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.option { background: #ffe4ec; }
+.yes { background: #9c27b0; color: white; }
+.no { background: #ccc; position: relative; }
+
+.hidden { display: none; }
+.message { font-weight: bold; margin-top: 15px; }
+
+/* Fireworks */
+.firework {
+    position: absolute;
+    font-size: 40px;
+    animation: boom 1s ease-out forwards;
+}
+@keyframes boom {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+/* Cry emoji */
+.cry {
+    font-size: 60px;
+    animation: shake 1s infinite;
+}
+@keyframes shake {
+    0% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+    100% { transform: rotate(0); }
+}
+
+/* Purple hearts */
+.heart {
+    position: fixed;
+    bottom: 0;
+    font-size: 24px;
+    color: purple;
+    animation: float 4s linear forwards;
+}
+@keyframes float {
+    to { transform: translateY(-100vh); opacity: 0; }
+}
+
+/* G & S Heart */
+.gs-heart {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 90px;
+    color: #e91e63;
+    animation: popHeart 1.5s ease-out forwards;
+    z-index: 999;
+}
+.gs-heart span {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    color: white;
+    font-weight: bold;
+}
+@keyframes popHeart {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+canvas { margin-top: 10px; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1 id="question"></h1>
+    <div id="options"></div>
+    <div id="message" class="message"></div>
+
+    <!-- Valentine -->
+    <div id="valentine" class="hidden">
+        <h2>💜 Will you be my Valentine? 💜</h2>
+        <button class="yes" onclick="yesClicked()">YES 💕</button>
+        <button class="no" id="noBtn" onclick="noClicked()">NO 🙃</button>
+        <div id="noMsg" class="message"></div>
+    </div>
+
+    <!-- YES SCREEN -->
+    <div id="yesScreen" class="hidden">
+        <h1>💜 She said YES 💜</h1>
+        <p>You just made my heart dance 🥰</p>
+        <img src="https://media.giphy.com/media/l1KuhBCqxOoJyr0m4/giphy.gif"
+             width="220" alt="V dancing">
+    </div>
+
+    <!-- QR -->
+    <div id="qrBox" class="hidden">
+        <h2>💜 Share Our Valentine 💜</h2>
+        <canvas id="qr"></canvas>
+        <p>Scan me 😘</p>
+    </div>
+</div>
+
+<!-- G & S Heart -->
+<div id="gsHeart" class="gs-heart hidden">
+    ❤️<span>G & S</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
+
+<script>
+const quiz = [
+    {
+        q: "What is my favorite food?",
+        options: ["Pizza", "Biryani", "Burger", "Dosa"],
+        answer: "Biryani"
+    },
+    {
+        q: "Where did I first propose you?",
+        options: ["Restaurant", "Beach", "On foot path", "Temple"],
+        answer: "On foot path"
+    },
+    {
+        q: "What is my childhood nick name?",
+        options: ["Babu", "Chinni", "Bunny", "Kanna"],
+        answer: "Chinni"
+    },
+    {
+        q: "What do I like always about you?",
+        options: ["Smile", "Anger", "Cooking", "Style"],
+        answer: "Anger"
+    }
+];
+
+let i = 0, noCount = 0;
+const noMessages = [
+    "Wrong option selected 😏",
+    "NO is disabled forever 😂",
+    "Universe says YES only 🌌",
+    "Nice try 😌",
+    "Finger slipped? 😜",
+    "NO ran away 🏃",
+    "System error ❌",
+    "Try again 😍",
+    "Okay now YES 😘"
+];
+
+function loadQ() {
+    document.getElementById("question").innerText = quiz[i].q;
+    const o = document.getElementById("options");
+    o.innerHTML = "";
+    quiz[i].options.forEach(opt => {
+        let b = document.createElement("button");
+        b.className = "option";
+        b.innerText = opt;
+        b.onclick = () => answer(opt);
+        o.appendChild(b);
+    });
+}
+
+function answer(sel) {
+    const msg = document.getElementById("message");
+    if (sel === quiz[i].answer) fireworks();
+    else msg.innerHTML = `<div class="cry">😭</div>`;
+
+    setTimeout(() => {
+        i++;
+        if (i < quiz.length) loadQ();
+        else {
+            document.getElementById("question").classList.add("hidden");
+            document.getElementById("options").classList.add("hidden");
+            msg.classList.add("hidden");
+            document.getElementById("valentine").classList.remove("hidden");
+        }
+    }, 2500);
+}
+
+function fireworks() {
+    for (let j = 0; j < 6; j++) {
+        let f = document.createElement("div");
+        f.className = "firework";
+        f.innerText = "🎆";
+        f.style.left = Math.random()*100+"%";
+        f.style.top = Math.random()*100+"%";
+        document.body.appendChild(f);
+        setTimeout(()=>f.remove(),1000);
+    }
+}
+
+function noClicked() {
+    const r = Math.random();
+    const btn = document.getElementById("noBtn");
+    if (r < 0.33) btn.style.transform = `translate(${Math.random()*150}px,${Math.random()*150}px)`;
+    else if (r < 0.66) {
+        btn.style.visibility="hidden";
+        setTimeout(()=>btn.style.visibility="visible",2000);
+    } else {
+        document.getElementById("noMsg").innerText =
+            noMessages[Math.min(noCount++, noMessages.length-1)];
+    }
+}
+
+function yesClicked() {
+    document.getElementById("valentine").classList.add("hidden");
+    document.getElementById("yesScreen").classList.remove("hidden");
+    document.getElementById("qrBox").classList.remove("hidden");
+
+    document.getElementById("gsHeart").classList.remove("hidden");
+    setTimeout(()=>document.getElementById("gsHeart").classList.add("hidden"),4000);
+
+    setInterval(()=>{
+        let h=document.createElement("div");
+        h.className="heart";
+        h.innerText="💜";
+        h.style.left=Math.random()*100+"%";
+        document.body.appendChild(h);
+        setTimeout(()=>h.remove(),4000);
+    },300);
+
+    new QRious({
+        element: document.getElementById("qr"),
+        value: window.location.href,
+        size: 180
+    });
+}
+
+loadQ();
+</script>
+</body>
+</html>
