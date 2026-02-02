@@ -6,19 +6,20 @@
 <style>
 html, body {
   margin:0; padding:0; height:100%; width:100%;
-  font-family:'Segoe UI', sans-serif;
+  font-family:'Segoe UI',sans-serif;
   background:linear-gradient(135deg,#ff9a9e,#fad0c4);
   overflow:hidden; position:relative;
 }
 
 /* Card styling */
 .card{
-  background:white;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
   padding:30px;
   border-radius:20px;
   width:90%;
   max-width:450px;
-  min-height:400px;
+  min-height:450px;
   text-align:center;
   box-shadow:0 8px 25px rgba(0,0,0,0.3);
   z-index:10;
@@ -38,4 +39,221 @@ button{width:100%;padding:12px;margin:6px 0;border-radius:20px;border:none;font-
 
 /* Fireworks */
 .firework{position:absolute;font-size:40px;animation:boom 1s ease-out forwards;}
-@keyframes boom{0%{transform:scale(0);opacity:1;}100%{transform:scale
+@keyframes boom{0%{transform:scale(0);opacity:1;}100%{transform:scale(3);opacity:0;}}
+
+/* Cry emoji */
+.cry{font-size:60px;animation:shake 0.8s;}
+@keyframes shake{0%{transform:rotate(0);}25%{transform:rotate(-10deg);}50%{transform:rotate(10deg);}100%{transform:rotate(0);}}
+
+/* Floating purple hearts */
+.heart{position:fixed;bottom:0;font-size:24px;color:purple;animation:float 4s linear forwards;}
+@keyframes float{to{transform:translateY(-100vh);opacity:0;}}
+
+/* G & S heart */
+.gs-heart{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  font-size:80px;color:#e91e63;
+  animation:popHeart 1s ease-out forwards;
+  z-index:11;text-align:center;
+}
+.gs-heart span{
+  position:absolute;top:35%;left:50%;
+  transform:translateX(-50%);
+  font-size:30px;color:white;font-weight:bold;
+}
+
+/* YES screen image */
+#yesScreen img{width:200px;}
+
+/* BTS GIF background */
+.bts-gif, .bts-symbol{
+  position:absolute;
+  width:80px;
+  height:80px;
+  z-index:1;
+  pointer-events:none;
+  opacity:0.5;
+  border-radius:10px;
+  animation:fall linear infinite, rotate linear infinite;
+}
+
+/* fall animation */
+@keyframes fall{0%{transform:translateY(-100px) rotate(0deg);}100%{transform:translateY(110vh) rotate(360deg);}}
+
+/* QR Canvas */
+canvas{margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1 id="question"></h1>
+  <div id="options"></div>
+  <div id="message" class="message"></div>
+
+  <div id="valentine" class="hidden">
+    <h2>💜 Will you be my Valentine? 💜</h2>
+    <button class="yes" onclick="yesClicked()">YES 💕</button>
+    <button class="no" id="noBtn" onclick="noClicked()">NO 🙃</button>
+    <div id="noMsg" class="message"></div>
+  </div>
+
+  <div id="yesScreen" class="hidden">
+    <h1>💜 She said YES 💜</h1>
+    <p>You just made my heart dance 🥰</p>
+    <img src="https://media.giphy.com/media/l0MYrBf2pck1a5Vig/giphy.gif" alt="V dancing">
+  </div>
+
+  <div id="qrBox" class="hidden">
+    <h2>💜 Share Our Valentine 💜</h2>
+    <canvas id="qr"></canvas>
+    <p>Scan me 😘</p>
+  </div>
+</div>
+
+<div id="gsHeart" class="gs-heart hidden">❤️<span>G & S</span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+// Quiz
+const quiz=[
+  {q:"What is my favorite food?",options:["Pizza","Biryani","Burger","Dosa"],answer:"Biryani"},
+  {q:"Where did I first propose you?",options:["Restaurant","Beach","On foot path","Temple"],answer:"On foot path"},
+  {q:"What is my childhood nick name?",options:["Babu","Chinni","Bunny","Kanna"],answer:"Chinni"},
+  {q:"What do I like always about you?",options:["Smile","Anger","Cooking","Style"],answer:"Anger"}
+];
+let i=0,noCount=0;
+const wrongMessages=[
+"Oops! Not correct 😜","Try again! 🙃","Wrong choice 😏","Are you serious? 😂",
+"Wrong answer, but cute 😅","Ha! Nope 😆","Try pressing the right button 💕","Wrong! But I still love you 😍"
+];
+const noMessages=[
+"Wrong option selected 😏","NO is disabled forever 😂","Universe says YES only 🌌","Nice try 😌","Finger slipped? 😜",
+"NO ran away 🏃","System error ❌","Try again 😍","Nope nope nope 🙅","That button is lying 😆",
+"Even browser says NO to NO 😌","Are you testing me? 😏","Wrong universe selected 🌍","Nice joke 😂",
+"Try pressing YES gently 💕","Your finger betrayed you 😜","Okay last chance… YES 😘"
+];
+
+function loadQ(){
+  document.getElementById("question").innerText=quiz[i].q;
+  const o=document.getElementById("options");
+  o.innerHTML="";
+  quiz[i].options.forEach(opt=>{
+    let b=document.createElement("button");
+    b.className="option";
+    b.innerText=opt;
+    b.onclick=()=>answer(opt);
+    o.appendChild(b);
+  });
+  document.getElementById("message").innerHTML="";
+}
+
+function answer(sel){
+  const msg=document.getElementById("message");
+  if(sel===quiz[i].answer){
+    fireworks(); clap();
+    i++;
+    if(i<quiz.length){setTimeout(loadQ,1000);}
+    else{setTimeout(showValentine,1000);}
+  } else {
+    const idx=Math.floor(Math.random()*wrongMessages.length);
+    msg.innerHTML='<div class="cry">😭</div><br>'+wrongMessages[idx];
+    setTimeout(()=>{msg.innerHTML="";},1000);
+  }
+}
+
+function fireworks(){
+  for(let j=0;j<6;j++){
+    let f=document.createElement("div");
+    f.className="firework"; f.innerText="🎆";
+    f.style.left=Math.random()*100+"%";
+    f.style.top=Math.random()*100+"%";
+    document.body.appendChild(f);
+    setTimeout(()=>f.remove(),1000);
+  }
+}
+
+function clap(){
+  let c=document.createElement("div");
+  c.className="clap"; c.innerText="👏👏👏";
+  document.body.appendChild(c);
+  setTimeout(()=>c.remove(),1000);
+}
+
+function noClicked(){
+  const r=Math.random(), btn=document.getElementById("noBtn");
+  document.getElementById("noMsg").innerText="";
+  if(r<0.33){btn.style.transform=`translate(${Math.random()*150}px,${Math.random()*150}px)`;}
+  else if(r<0.66){btn.style.visibility="hidden"; setTimeout(()=>btn.style.visibility="visible",1500);}
+  else{document.getElementById("noMsg").innerText=noMessages[noCount%noMessages.length]; noCount++;}
+}
+
+function showValentine(){
+  document.getElementById("question").classList.add("hidden");
+  document.getElementById("options").classList.add("hidden");
+  document.getElementById("message").classList.add("hidden");
+  document.getElementById("valentine").classList.remove("hidden");
+}
+
+function yesClicked(){
+  document.getElementById("valentine").classList.add("hidden");
+  document.getElementById("yesScreen").classList.remove("hidden");
+  document.getElementById("qrBox").classList.remove("hidden");
+
+  const heart=document.getElementById("gsHeart");
+  heart.classList.remove("hidden");
+  setTimeout(()=>heart.classList.add("hidden"),3000);
+
+  setInterval(()=>{
+    let h=document.createElement("div");
+    h.className="heart"; h.innerText="💜";
+    h.style.left=Math.random()*100+"%";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),4000);
+  },300);
+
+  new QRious({element:document.getElementById("qr"),value:window.location.href,size:180});
+}
+
+loadQ();
+
+// BTS member GIFs
+const btsUrls=[
+  "https://media.giphy.com/media/3o7abld2L7m9h3p1du/giphy.gif",
+  "https://media.giphy.com/media/l0HlQ7LRalJf4hUBq/giphy.gif",
+  "https://media.giphy.com/media/xUOwGmZ3HV7P8Kkm2A/giphy.gif",
+  "https://media.giphy.com/media/xUOwGmZ1XhLkTtwqTq/giphy.gif",
+  "https://media.giphy.com/media/xUOwGmZ1YnwZ0pBrb6/giphy.gif",
+  "https://media.giphy.com/media/xUOwGmZ1Y8Ho3c4a3y/giphy.gif",
+  "https://media.giphy.com/media/xUOwGmZ1Y4v1yJb4K8/giphy.gif"
+];
+
+// BTS symbols GIFs
+const btsSymbols=[
+  "https://media.giphy.com/media/1oF2jF4xT7xFyQeP6v/giphy.gif",
+  "https://media.giphy.com/media/l3vR6jvUiyYpC6nQY/giphy.gif",
+  "https://media.giphy.com/media/l0ExncehJzexFpRHq/giphy.gif",
+  "https://media.giphy.com/media/xT0BKqhdlKCxCNsVTq/giphy.gif"
+];
+
+function spawnGIFs(urls,className){
+  for(let i=0;i<urls.length;i++){
+    let g=document.createElement("img");
+    g.src=urls[i]; g.className=className;
+    g.style.left=Math.random()*90+"%";
+    const dur=6+Math.random()*6;
+    g.style.animationDuration=`${dur}s, ${2+Math.random()*3}s`;
+    g.style.opacity=0.5 + Math.random()*0.3;
+    document.body.appendChild(g);
+  }
+}
+spawnGIFs(btsUrls,'bts-gif');
+spawnGIFs(btsSymbols,'bts-symbol');
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
