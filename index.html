@@ -13,8 +13,7 @@ html, body {
 
 /* Card styling */
 .card{
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.95);
   padding:30px;
   border-radius:20px;
   width:90%;
@@ -34,42 +33,21 @@ h1,h2{color:#e91e63;}
 button{width:100%;padding:12px;margin:6px 0;border-radius:20px;border:none;font-size:16px;cursor:pointer;}
 .option{background:#ffe4ec;}
 .yes{background:#9c27b0;color:white;}
-.no{background:#ccc;position:relative;}
+.no{background:#ccc;}
 .hidden{display:none;}
 .message{font-weight:bold;margin-top:12px;font-size:16px;}
 
-/* Fireworks */
-.firework{position:absolute;font-size:40px;animation:boom 1s ease-out forwards;}
-@keyframes boom{0%{transform:scale(0);opacity:1;}100%{transform:scale(3);opacity:0;}}
-
 /* Cry emoji */
-.cry{font-size:60px;animation:shake 0.8s;}
-@keyframes shake{0%{transform:rotate(0);}25%{transform:rotate(-10deg);}50%{transform:rotate(10deg);}100%{transform:rotate(0);}}
+.cry{font-size:60px;}
 
-/* G & S heart */
-.gs-heart{
-  position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-50%) scale(0);
-  font-size:80px;color:#e91e63;
-  animation:popHeart 1s ease-out forwards;
-  z-index:11;text-align:center;
-}
-.gs-heart span{
-  position:absolute;top:35%;left:50%;
-  transform:translateX(-50%);
-  font-size:30px;color:white;font-weight:bold;
-}
-
-/* YES screen image */
-#yesScreen img{width:200px;}
-
-/* BTS images container behind card */
+/* BTS background images */
 .bts-background img{
   position:absolute;
   width:80px;
   height:80px;
-  opacity:0.6;
+  opacity:0.5;
   z-index:1;
+  pointer-events:none;
   border-radius:10px;
 }
 </style>
@@ -87,4 +65,108 @@ button{width:100%;padding:12px;margin:6px 0;border-radius:20px;border:none;font-
     <button class="yes" onclick="yesClicked()">YES 💕</button>
     <button class="no" id="noBtn" onclick="noClicked()">NO 🙃</button>
     <div id="noMsg" class="message"></div>
-  </
+  </div>
+
+  <div id="yesScreen" class="hidden">
+    <h1>💜 She said YES 💜</h1>
+    <p>You just made my heart dance 🥰</p>
+    <img src="https://media.giphy.com/media/l0MYrBf2pck1a5Vig/giphy.gif" alt="V dancing">
+  </div>
+</div>
+
+<div class="bts-background" id="btsBackground"></div>
+
+<script>
+// Quiz logic
+const quiz=[
+  {q:"What is my favorite food?",options:["Pizza","Biryani","Burger","Dosa"],answer:"Biryani"},
+  {q:"Where did I first propose you?",options:["Restaurant","Beach","On foot path","Temple"],answer:"On foot path"},
+  {q:"What is my childhood nick name?",options:["Babu","Chinni","Bunny","Kanna"],answer:"Chinni"},
+  {q:"What do I like always about you?",options:["Smile","Anger","Cooking","Style"],answer:"Anger"}
+];
+let i=0,noCount=0;
+
+const wrongMessages=[
+"Oops! Not correct 😜","Try again! 🙃","Wrong choice 😏","Are you serious? 😂",
+"Wrong answer, but cute 😅","Ha! Nope 😆","Try pressing the right button 💕","Wrong! But I still love you 😍"
+];
+const noMessages=[
+"Wrong option selected 😏","NO is disabled forever 😂","Universe says YES only 🌌","Nice try 😌","Finger slipped? 😜",
+"NO ran away 🏃","System error ❌","Try again 😍","Nope nope nope 🙅"
+];
+
+function loadQ(){
+  document.getElementById("question").innerText=quiz[i].q;
+  const o=document.getElementById("options");
+  o.innerHTML="";
+  quiz[i].options.forEach(opt=>{
+    let b=document.createElement("button");
+    b.className="option";
+    b.innerText=opt;
+    b.onclick=()=>answer(opt);
+    o.appendChild(b);
+  });
+  document.getElementById("message").innerHTML="";
+}
+
+function answer(sel){
+  const msg=document.getElementById("message");
+  if(sel===quiz[i].answer){
+    i++;
+    if(i<quiz.length){setTimeout(loadQ,500);}
+    else{setTimeout(showValentine,500);}
+  } else {
+    const idx=Math.floor(Math.random()*wrongMessages.length);
+    msg.innerHTML='<div class="cry">😭</div><br>'+wrongMessages[idx];
+    setTimeout(()=>{msg.innerHTML="";},1000);
+  }
+}
+
+function showValentine(){
+  document.getElementById("question").classList.add("hidden");
+  document.getElementById("options").classList.add("hidden");
+  document.getElementById("message").classList.add("hidden");
+  document.getElementById("valentine").classList.remove("hidden");
+}
+
+function noClicked(){
+  const r=Math.random(), btn=document.getElementById("noBtn");
+  document.getElementById("noMsg").innerText="";
+  if(r<0.33){btn.style.transform=`translate(${Math.random()*150}px,${Math.random()*150}px)`;}
+  else if(r<0.66){btn.style.visibility="hidden"; setTimeout(()=>btn.style.visibility="visible",1500);}
+  else{document.getElementById("noMsg").innerText=noMessages[noCount%noMessages.length]; noCount++;}
+}
+
+function yesClicked(){
+  document.getElementById("valentine").classList.add("hidden");
+  document.getElementById("yesScreen").classList.remove("hidden");
+}
+
+// BTS images behind card
+const btsUrls=[
+"https://media.giphy.com/media/3o7abld2L7m9h3p1du/giphy.gif",
+"https://media.giphy.com/media/l0HlQ7LRalJf4hUBq/giphy.gif",
+"https://media.giphy.com/media/xUOwGmZ3HV7P8Kkm2A/giphy.gif",
+"https://media.giphy.com/media/xUOwGmZ1XhLkTtwqTq/giphy.gif",
+"https://media.giphy.com/media/xUOwGmZ1YnwZ0pBrb6/giphy.gif",
+"https://media.giphy.com/media/xUOwGmZ1Y8Ho3c4a3y/giphy.gif",
+"https://media.giphy.com/media/xUOwGmZ1Y4v1yJb4K8/giphy.gif",
+"https://media.giphy.com/media/1oF2jF4xT7xFyQeP6v/giphy.gif",
+"https://media.giphy.com/media/l3vR6jvUiyYpC6nQY/giphy.gif",
+"https://media.giphy.com/media/l0ExncehJzexFpRHq/giphy.gif"
+];
+
+const container=document.getElementById("btsBackground");
+btsUrls.forEach(url=>{
+  let img=document.createElement("img");
+  img.src=url;
+  img.style.top=Math.random()*80+"%";
+  img.style.left=Math.random()*80+"%";
+  container.appendChild(img);
+});
+
+// Load first question
+loadQ();
+</script>
+</body>
+</html>
